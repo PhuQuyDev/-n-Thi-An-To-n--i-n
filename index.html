@@ -106,9 +106,9 @@ button:disabled:hover{background:#fff;color:#333;border-color:#bbb}
 <body>
 
 <div class="toast" id="toastWelcome">
-  <span class="icon">🌹</span>
+  <span class="icon"></span>
   <button class="close" id="toastClose" title="Đóng"></button>
-  <span>Chúc bạn thi tốt!</span>
+  <span>ĐANG SỬA NHỮNG LỖI SAI RỒI NHÁ 😃</span>
 </div>
 
 <section id="screen-start" class="screen active">
@@ -135,6 +135,12 @@ button:disabled:hover{background:#fff;color:#333;border-color:#bbb}
   </div>
 </section>
 
+<div class="toast" id="toastWelcome">
+  <span class="icon"></span>
+  <button class="close" id="toastClose" title="Đóng"></button>
+  <span>90 Phút Bắt Đầu!</span>
+</div>
+
 <section id="screen-quiz" class="screen">
   <div class="topbar">
     <div class="left">Đã làm: <b id="progress">0/70</b></div>
@@ -151,6 +157,12 @@ button:disabled:hover{background:#fff;color:#333;border-color:#bbb}
     </div>
   </div>
 </section>
+
+<div class="toast" id="toastWelcome">
+  <span class="icon"></span>
+  <button class="close" id="toastClose" title="Đóng"></button>
+  <span>🌹 Cảm Ơn Bạn Đã Sử Dụng Web Và Làm Bài</span>
+</div>
 
 <section id="screen-result" class="screen">
   <div class="res-wrap">
@@ -420,7 +432,7 @@ var BANK = [
     {
         q: "Trong kỹ thuật an toàn điện, trị số điện trở người trung bình Rng thường lấy bằng bao nhiêu?",
         o: ["100Ω", "500Ω", "1000Ω", "5000Ω"],
-        c: 2    // C21 · P2
+        c: 0    // C21 · P2
     },
     {
         q: "Khi điện áp tiếp xúc Ux tăng, điện trở người Rng sẽ thay đổi như thế nào?",
