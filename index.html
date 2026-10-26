@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Thi An Toàn Điện</title>
+<style>
+body{
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  font-size:15px;
+  color:#222;
+  background:#f2f2f2;
+}
+.screen{display:none;min-height:100vh;padding:20px;box-sizing:border-box;flex-direction:column;align-items:center;justify-content:center}
+.screen.active{display:flex}
+.box{
+  width:100%;
+  max-width:880px;
+  background:#fff;
+  border:1px solid #ddd;
+  border-radius:14px;
+  padding:26px;
+  box-shadow:0 2px 6px rgba(0,0,0,.04);
+}
+h1{font-size:26px;margin:0 0 10px;text-align:center}
+h1 span{color:#0a58ca}
+.note{text-align:center;color:#666;margin:0 0 22px;line-height:1.6}
+button{
+  font-family:Arial, Helvetica, sans-serif;
+  font-size:15px;
+  padding:11px 24px;
+  border:1px solid #0a58ca;
+  background:#0a58ca;
+  color:#fff;
+  border-radius:10px;
+  cursor:pointer;
+  transition:background .12s;
+}
+button:hover{background:#084298}
+button.plain{background:#fff;color:#333;border:1px solid #bbb}
+button.plain:hover{background:#f2f2f2}
+button.red{background:#c82333;border-color:#c82333}
+button.red:hover{background:#a71d2a}
+button:disabled{opacity:.5;cursor:default}
+button:disabled:hover{background:#fff;color:#333;border-color:#bbb}
+.center{text-align:center}
+
+.bar-wrap{width:100%;max-width:500px;height:16px;border:1px solid #ccc;background:#eee;margin:18px auto 8px;border-radius:99px;overflow:hidden}
+.bar{height:100%;width:0;background:#0a58ca;border-radius:99px;transition:width .1s}
+.pct{text-align:center;font-size:22px;font-weight:bold;color:#0a58ca}
+
+#screen-quiz{justify-content:flex-start;padding-top:16px}
+.topbar{
+  position:sticky;top:0;z-index:10;
+  width:100%;max-width:960px;
+  background:#fff;border:1px solid #ddd;border-radius:12px;
+  padding:10px 16px;margin-bottom:14px;
+  display:flex;flex-wrap:wrap;gap:10px;
+  align-items:center;justify-content:space-between;
+  box-shadow:0 2px 6px rgba(0,0,0,.04);
+}
+.topbar .left{font-weight:bold;color:#555}
+.topbar .left b{color:#222}
+#timer{font-family:"Courier New",monospace;font-size:18px;font-weight:bold;color:#0a58ca}
+#timer.low{color:#c82333}
+.qbox{
+  width:100%;max-width:960px;background:#fff;border:1px solid #ddd;border-radius:14px;padding:22px;
+  box-shadow:0 2px 6px rgba(0,0,0,.04);
+}
+.qnum{color:#888;font-size:13px;margin-bottom:8px}
+.qtext{font-size:16px;font-weight:bold;line-height:1.55;margin-bottom:16px}
+.opt{
+  display:block;width:100%;text-align:left;
+  padding:12px 14px;margin:7px 0;
+  background:#fafafa;border:1px solid #ddd;border-radius:10px;
+  color:#222;font-size:15px;line-height:1.5;
+  cursor:pointer;font-family:inherit;transition:.12s;
+}
+.opt:hover{background:#eef4fc;border-color:#0a58ca}
+.opt.picked{background:#dbe7fb;border-color:#0a58ca}
+.opt b{display:inline-block;width:22px;color:#0a58ca}
+.opt.picked b{color:#084298}
+.navrow{display:flex;gap:10px;justify-content:space-between;margin-top:18px;flex-wrap:wrap}
+
+/* ============ KẾT QUẢ ============ */
+#screen-result{justify-content:flex-start;padding-top:24px}
+.res-wrap{width:100%;max-width:960px}
+
+.card-top{
+  background:#fff;
+  border:1px solid #ddd;
+  border-radius:14px;
+  padding:26px 22px 22px;
+  box-shadow:0 2px 6px rgba(0,0,0,.04);
+  text-align:center;
+}
+
+.card-title{
+  font-size:12px;
+  color:#999;
+  text-transform:uppercase;
+  letter-spacing:1.5px;
+  font-weight:bold;
+  margin-bottom:18px;
+}
+
+/* Khối điểm căn giữa */
+.score-block{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  margin-bottom:22px;
+}
+.score-num{
+  font-size:64px;
+  font-weight:bold;
+  color:#0a58ca;
+  line-height:1;
+  letter-spacing:-1px;
+}
+.score-sub{
+  font-size:13px;
+  color:#888;
+  margin-top:8px;
+  letter-spacing:.5px;
+}
+
+.verdict{
+  font-size:19px;
+  font-weight:bold;
+  margin-bottom:20px;
+  line-height:1.3;
+}
+.verdict.g{color:#1a7f37}
+.verdict.y{color:#9a6700}
+.verdict.r{color:#c82333}
+
+/* 4 ô số liệu căn giữa đều */
+.stats-row{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  flex-wrap:wrap;
+  margin-bottom:24px;
+}
+.stat-cell{
+  background:#f7f7f7;
+  border:1px solid #e5e5e5;
+  border-radius:10px;
+  padding:10px 18px;
+  min-width:90px;
+  text-align:center;
+}
+.stat-cell b{
+  display:block;
+  font-size:18px;
+  font-weight:bold;
+  margin-bottom:3px;
+}
+.stat-cell span{
+  font-size:11px;
+  color:#777;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+}
+
+/* Nút làm lại */
+.btn-restart{
+  width:100%;
+  max-width:420px;
+  padding:16px 20px;
+  background:#1a7f37;
+  color:#fff;
+  border:none;
+  border-radius:12px;
+  font-family:inherit;
+  font-size:16px;
+  font-weight:bold;
+  letter-spacing:.5px;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  transition:.15s;
+  box-shadow:0 3px 10px rgba(26,127,55,.25);
+}
+.btn-restart:hover{
+  background:#156129;
+  transform:translateY(-1px);
+  box-shadow:0 5px 14px rgba(26,127,55,.35);
+}
+.btn-restart:active{
+  transform:translateY(0);
+}
+.btn-restart .icon{
+  font-size:20px;
+  line-height:1;
+  font-weight:normal;
+}
+
+/* Toolbar lọc + danh sách */
+.toolbar{
+  margin:16px 0 10px;
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.toolbar .lbl{color:#666;font-size:13px}
+.tab{
+  padding:7px 15px;background:#fff;border:1px solid #ccc;border-radius:8px;
+  color:#444;font-size:13px;cursor:pointer;font-family:inherit;
+}
+.tab.on{background:#0a58ca;border-color:#0a58ca;color:#fff}
+
+.rlist{background:#fff;border:1px solid #ddd;border-radius:14px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+.rrow{border-bottom:1px solid #eee}
+.rrow:last-child{border-bottom:none}
+.rhead{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:12px 14px;cursor:pointer;
+}
+.rhead:hover{background:#f7f7f7}
+.rstt{
+  width:30px;height:30px;line-height:28px;text-align:center;
+  border:1px solid #ccc;background:#eee;color:#444;border-radius:8px;
+  font-weight:bold;font-size:13px;flex-shrink:0;
+}
+.rstt.ok{background:#d4f0da;border-color:#1a7f37;color:#1a7f37}
+.rstt.bad{background:#fadbd8;border-color:#c82333;color:#c82333}
+.rstt.skip{background:#e5e5e5;color:#666}
+.rtxt{flex:1;font-size:14px;line-height:1.5;color:#333;padding-top:5px}
+.rar{color:#999;font-size:12px;padding-top:7px;transition:.2s}
+.rrow.open .rar{transform:rotate(180deg)}
+.rbody{display:none;padding:0 14px 14px 56px}
+.rrow.open .rbody{display:block}
+.rfull{font-weight:bold;line-height:1.55;margin:0 0 10px;font-size:14px}
+.ropt{
+  padding:9px 12px;margin:5px 0;font-size:14px;
+  background:#fafafa;border:1px solid #e8e8e8;border-radius:8px;line-height:1.5;
+}
+.ropt.correct{background:#e6f4ea;border-color:#1a7f37;color:#155724;font-weight:bold}
+.ropt.wrong{background:#fce8e8;border-color:#c82333;color:#7a1d26;font-weight:bold}
+.empty{text-align:center;color:#888;padding:26px;font-size:14px}
+.footnote{text-align:center;color:#888;font-size:13px;margin-top:16px}
+
+.mask{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;padding:20px;z-index:100}
+.mask.show{display:flex}
+.dlg{background:#fff;border:1px solid #ddd;border-radius:14px;padding:22px;width:100%;max-width:400px;box-shadow:0 8px 30px rgba(0,0,0,.15)}
+.dlg h3{margin:0 0 10px;font-size:16px}
+.dlg p{margin:0 0 16px;line-height:1.55;white-space:pre-line;color:#444}
+.dlg .row{display:flex;gap:8px;justify-content:flex-end}
+</style>
+</head>
+<body>
+
+<section id="screen-start" class="screen active">
+  <div class="box center">
+    <h1>THI <span>AN TOÀN ĐIỆN</span></h1>
+    <p class="note">70 câu trắc nghiệm ngẫu nhiên<br>Thời gian: 90 phút. Thang điểm: 10</p>
+    <button id="btnStart">Bắt đầu</button>
+  </div>
+</section>
+
+<section id="screen-loading" class="screen">
+  <div class="box center">
+    <h1 style="font-size:18px">Đang tạo đề...</h1>
+    <div class="pct" id="pct">0%</div>
+    <div class="bar-wrap"><div class="bar" id="bar"></div></div>
+  </div>
+</section>
+
+<section id="screen-ready" class="screen">
+  <div class="box center">
+    <h1>Bạn đã chuẩn bị làm bài chưa?</h1>
+    <p class="note">Bấm "Sẵn sàng" là đồng hồ 90 phút bắt đầu chạy.<br>Hết giờ sẽ tự nộp bài.</p>
+    <button id="btnReady">Sẵn sàng</button>
+  </div>
+</section>
+
+<section id="screen-quiz" class="screen">
+  <div class="topbar">
+    <div class="left">Đã làm: <b id="progress">0/70</b></div>
+    <div id="timer">90:00</div>
+    <button class="red" style="padding:8px 18px;font-size:14px" id="btnSubmit">Nộp bài</button>
+  </div>
+
+  <div class="qbox">
+    <div class="qnum" id="qIndex">Câu 1/70</div>
+    <div class="qtext" id="qText"></div>
+    <div id="options"></div>
+
+    <div class="navrow">
+      <button class="plain" id="prevBtn">Câu trước</button>
+      <button class="plain" id="nextBtn">Câu sau</button>
+    </div>
+  </div>
+</section>
+
+<section id="screen-result" class="screen">
+  <div class="res-wrap">
+    <div class="card-top">
+      <div class="card-title">Kết quả bài thi</div>
+
+      <div class="score-block">
+        <div class="score-num" id="bigScore">0.00</div>
+        <div class="score-sub">điểm / 10</div>
+      </div>
+
+      <div class="verdict" id="verdict">&nbsp;</div>
+
+      <div class="stats-row">
+        <div class="stat-cell"><b id="mDung" style="color:#1a7f37">0</b><span>Đúng</span></div>
+        <div class="stat-cell"><b id="mSai" style="color:#c82333">0</b><span>Sai</span></div>
+        <div class="stat-cell"><b id="mBo" style="color:#666">0</b><span>Bỏ trống</span></div>
+        <div class="stat-cell"><b id="mTime" style="color:#0a58ca">00:00</b><span>Thời gian</span></div>
+      </div>
+
+      <button class="btn-restart" id="btnAgain">
+        <span class="icon">↻</span>
+        LÀM LẠI BÀI MỚI
+      </button>
+    </div>
+
+    <div class="toolbar">
+      <span class="lbl">Xem:</span>
+      <button class="tab on" data-filter="all">Tất cả</button>
+      <button class="tab" data-filter="wrong">Câu sai</button>
+      <button class="tab" data-filter="right">Câu đúng</button>
+    </div>
+
+    <div class="rlist" id="rlist"></div>
+
+    <p class="footnote">Bấm vào từng câu để xem đáp án.</p>
+  </div>
+</section>
+
+<div class="mask" id="mask">
+  <div class="dlg">
+    <h3 id="dlgTitle"></h3>
+    <p id="dlgBody"></p>
+    <div class="row">
+      <button class="plain" id="dlgCancel" style="padding:8px 18px;font-size:14px">Hủy</button>
+      <button id="dlgOk" style="padding:8px 18px;font-size:14px">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var BANK = [
+{q:"Con người bị điện giật là do sự chênh lệch về ………. tại vị trí tiếp xúc.",
+ o:["Dòng điện.","Điện trở.","Công suất.","Điện áp."], c:3},
+{q:"Nguyên nhân dẫn đến tai nạn điện là do?",
+ o:["Chạm trực tiếp vào vật mang điện, chạm vào vỏ cách điện của vật mang điện.",
+    "Chạm trực tiếp vào vật mang điện, chạm gián tiếp vào vật mang điện và do hồ quang điện.",
+    "Chạm trực tiếp thiết bị đo, chạm gián tiếp vào vật mang điện và do không sử dụng bảo hộ.",
+    "Chạm trực tiếp thiết bị đo, do không sử dụng bảo hộ và do khi đóng điện."], c:1},
+{q:"Tiếp xúc trực tiếp với vật mang điện được hiểu như thế nào?",
+ o:["Chạm vào dây dẫn hoặc vật mang điện khi hệ thống điện đang vận hành bình thường.",
+    "Chạm vào vật bình thường không có điện nhưng bất ngờ bị rò điện.",
+    "Chạm vào đất tại nơi có dòng điện rò.",
+    "Chạm vào vật cách điện đã hỏng."], c:0},
+{q:"Tiếp xúc gián tiếp với vật mang điện được hiểu như thế nào?",
+ o:["Chạm trực tiếp vào dây pha của mạng điện.",
+    "Chạm vào vật lẽ ra không có điện nhưng bất ngờ trở nên dẫn điện do hư hỏng cách điện.",
+    "Chạm vào hai dây pha cùng lúc.",
+    "Đứng gần trạm biến áp đang vận hành."], c:1},
+{q:"Yếu tố nào sau đây quyết định mức độ nguy hiểm khi dòng điện chạy qua cơ thể?",
+ o:["Màu sắc dây dẫn.","Giá trị điện trở của cơ thể người.",
+    "Kích thước thiết bị điện.","Vị trí lắp đặt cầu dao."], c:1},
+{q:"Điện trở toàn phần của người (Rk) được xác định theo công thức nào sau đây?",
+ o:["Rk = Rtx1 + Rki + Rtx2","Rk = Rtx1 - Rki","Rk = Rki / Rtx2","Rk = Rtx1 x Rtx2"], c:0},
+{q:"Giá trị Rng nhỏ nhất khi dòng điện đi từ ............. qua ....................",
+ o:["Tay – Tay.","Tay – Chân.","Chân – Tay.","2 tay – 2 chân."], c:0},
+{q:"Mức độ nguy hiểm của một tai nạn điện phụ thuộc vào những yếu tố nào?",
+ o:["Biên độ dòng điện, thời gian tiếp xúc, đường đi dòng điện, tần số dòng điện và môi trường làm việc.",
+    "Chỉ có biên độ dòng điện.",
+    "Chỉ có thời gian tiếp xúc và tần số.",
+    "Chỉ có môi trường làm việc."], c:0},
+{q:"Tiêu chuẩn IEC 60479-1 dùng để mô tả điều gì?",
+ o:["Phạm vi tác dụng của dòng điện xoay chiều qua cơ thể người theo thời gian và trị số dòng điện.",
+    "Cấp bảo vệ bằng vỏ ngoài (mã IP).",
+    "Yêu cầu an toàn cho máy biến áp.",
+    "Quy định về cáp điện ngầm."], c:0},
+{q:"Dòng điện xoay chiều (AC) trị số ....................... là ngưỡng dòng điện an toàn đối với cơ thể.",
+ o:["1mA.","5mA.","10mA.","50mA."], c:2},
+{q:"Dòng điện một chiều (DC) trị số ....................... là ngưỡng dòng điện an toàn đối với cơ thể.",
+ o:["10mA.","25mA.","50mA.","100mA."], c:2},
+{q:"Căn cứ vào các ngưỡng cảm nhận và nguy hiểm, kết luận nào sau đây là đúng?",
+ o:["Điện một chiều nguy hiểm hơn điện xoay chiều ở mọi tần số.",
+    "Điện xoay chiều tần số công nghiệp nguy hiểm hơn điện một chiều.",
+    "Điện một chiều và xoay chiều nguy hiểm như nhau.",
+    "Điện áp không ảnh hưởng đến mức độ nguy hiểm."], c:1},
+{q:"Trong mạng điện công nghiệp và dân dụng, tai nạn điện thường xảy ra ở cấp điện áp nào?",
+ o:["U ≤ 1000V.","U > 1000V.","U = 35kV.","U = 110kV."], c:0},
+{q:"Bảo vệ cấp 1 (bảo vệ cơ bản) có nhiệm vụ gì?",
+ o:["Chống tiếp xúc trực tiếp trong điều kiện bình thường.",
+    "Chống tiếp xúc gián tiếp khi có lỗi trong mạch điện.",
+    "Bảo vệ bổ sung bằng RCD.",
+    "Bảo vệ chống sét."], c:0},
+{q:"Bảo vệ cấp 2 (bảo vệ khi có lỗi) có nhiệm vụ gì?",
+ o:["Chống tiếp xúc trực tiếp trong điều kiện bình thường.",
+    "Chống tiếp xúc gián tiếp hoặc chống điện giật khi có lỗi trong mạch điện.",
+    "Cách ly hoàn toàn nguồn điện.",
+    "Đo điện trở cách điện."], c:1},
+{q:"Bảo vệ cấp 3 (bảo vệ bổ sung) sử dụng thiết bị nào và ngưỡng dòng rò bao nhiêu?",
+ o:["Cầu chì với dòng 30A.",
+    "Aptomat chống rò RCD với dòng điện dò < 30mA.",
+    "Máy biến áp cách ly 1000V.",
+    "Rơ le nhiệt với dòng 10A."], c:1},
+{q:"Găng tay cách điện có công dụng gì trong kỹ thuật an toàn điện?",
+ o:["Bảo vệ cho người thao tác được cách điện với đất khi đóng cắt điện cao áp.",
+    "Tùy điện áp môi trường mà chọn loại phù hợp để bảo vệ bàn tay khi thao tác thiết bị điện.",
+    "Chỉ dùng để giữ ấm tay.",
+    "Dùng thay thế cầu dao."], c:1},
+{q:"Sào cách điện có công dụng gì trong kỹ thuật an toàn điện?",
+ o:["Kiểm tra nhanh thiết bị có rò điện hay không.",
+    "Kéo nạn nhân bị tai nạn điện giật ra khỏi khu vực nguy hiểm một cách an toàn.",
+    "Lót sàn cách điện.",
+    "Đo dòng điện chạm đất."], c:1},
+{q:"Bút thử điện có công dụng gì trong kỹ thuật an toàn điện?",
+ o:["Kiểm tra nhanh trước khi sửa chữa xem thiết bị/phích cắm có bị rò điện hay không.",
+    "Cách điện cho người thao tác đóng cắt cao áp.",
+    "Đo điện áp bước.",
+    "Thay thế cầu dao điện."], c:0},
+{q:"Khi xảy ra tai nạn điện với cấp điện áp U ≤ 1000V, bước đầu tiên cần thực hiện là gì?",
+ o:["Gọi cấp cứu 115 ngay lập tức mà không cần cắt điện.",
+    "Cách ly người bị nạn khỏi nguồn điện.",
+    "Lập hồ sơ báo cáo.",
+    "Quan sát hiện trường trước."], c:1},
+
+{q:"Trong kỹ thuật an toàn điện, trị số điện trở người trung bình Rng thường lấy bằng bao nhiêu?",
+ o:["100Ω","500Ω","1000Ω","5000Ω"], c:2},
+{q:"Khi điện áp tiếp xúc Ux tăng, điện trở người Rng sẽ thay đổi như thế nào?",
+ o:["Tăng lên","Giảm xuống do hiện tượng điện phân và đổ mồ hôi",
+    "Không thay đổi","Bằng 0 ngay lập tức"], c:1},
+{q:"Điện áp tiếp xúc Ux được định nghĩa là gì?",
+ o:["Điện áp lớn nhất giữa hai điểm trên đường đi của dòng điện qua cơ thể người",
+    "Điện áp của nguồn cấp cho toàn hệ thống",
+    "Điện áp giữa hai dây pha của mạng điện",
+    "Điện áp đo được tại tủ điện tổng"], c:0},
+{q:"Công thức nào sau đây thể hiện đúng mối quan hệ giữa Utx, Utd và Uch?",
+ o:["Utx = Utd - Uch","Utx = Utd + Uch","Utx = Utd x Uch","Utx = Uch / Utd"], c:0},
+{q:"Điện áp tiếp xúc Utx phụ thuộc vào những yếu tố nào?",
+ o:["Nguồn điện, tình trạng tiếp xúc với vật mang điện, khoảng cách và các vật dẫn điện xung quanh",
+    "Chỉ phụ thuộc vào màu sắc dây dẫn",
+    "Chỉ phụ thuộc vào nhiệt độ môi trường",
+    "Chỉ phụ thuộc vào giờ trong ngày"], c:0},
+{q:"Điện áp tiếp xúc cho phép Utxcp tại nhà xưởng ngập nước là bao nhiêu?",
+ o:["12V","25V","50V","100V"], c:0},
+{q:"Điện áp tiếp xúc cho phép Utxcp tại nhà xưởng âm ướt là bao nhiêu?",
+ o:["12V","25V","50V","75V"], c:1},
+{q:"Điện áp tiếp xúc cho phép Utxcp tại nhà xưởng khô ráo là bao nhiêu?",
+ o:["12V","25V","50V","100V"], c:2},
+{q:"Biện pháp tốt nhất để giảm dòng điện qua người khi tiếp xúc với vật mang điện là gì?",
+ o:["Sử dụng nguồn điện áp thấp và tăng cường điện trở cách điện với đất (đi ủng, đeo găng tay, dùng thảm cách điện...)",
+    "Tăng điện áp nguồn lên cao hơn",
+    "Giảm tiết diện dây dẫn",
+    "Bỏ hệ thống nối đất"], c:0},
+{q:"Hệ số tiếp xúc α trong công thức Ux = α.Ua có giá trị như thế nào?",
+ o:["α ≥ 1","α ≤ 1","α = 0","α luôn bằng 1"], c:1},
+{q:"Theo nghiên cứu, đường đi của dòng điện nào qua người được xem là nguy hiểm nhất?",
+ o:["Từ chân qua chân","Từ tay qua tay","Từ đầu qua tay","Từ tay phải qua chân"], c:3},
+{q:"Đường đi nào của dòng điện có tỷ lệ dòng điện qua tim thấp nhất?",
+ o:["Từ chân qua chân","Từ tay trái qua chân","Từ đầu qua chân","Từ đầu qua tay"], c:0},
+{q:"Đường đi nào của dòng điện có tỷ lệ dòng điện qua tim cao nhất?",
+ o:["Từ tay qua tay","Từ tay phải qua chân","Từ đầu qua chân","Từ đầu qua tay"], c:2},
+{q:"Tần số dòng điện qua người được xem là nguy hiểm nhất nằm trong khoảng nào?",
+ o:["1Hz đến 10Hz","25Hz đến 100Hz","1000Hz đến 5000Hz","Trên 10.000Hz"], c:1},
+{q:"Tần số dòng điện công nghiệp (rất nguy hiểm cho người) nằm trong khoảng nào?",
+ o:["10Hz đến 20Hz","50Hz đến 60Hz","200Hz đến 300Hz","500Hz đến 1000Hz"], c:1},
+{q:"Khi tần số dòng điện tăng lên trên 1000Hz, mức độ nguy hiểm đối với người sẽ như thế nào?",
+ o:["Tăng lên rất cao","Giảm đi vì dòng điện chỉ đi ở ngoài da",
+    "Không thay đổi","Gây tử vong tức thì"], c:1},
+{q:"Thời gian tác dụng của dòng điện qua người càng lâu thì điện trở người Rng sẽ như thế nào?",
+ o:["Càng tăng","Càng giảm vì da bị nóng dần và lớp sừng bị chọc thủng nhiều hơn",
+    "Không thay đổi","Chỉ thay đổi khi có dòng một chiều"], c:1},
+{q:"Khi người làm việc trong môi trường nóng, ẩm, nhiều bụi, hóa chất, điện trở người Rng sẽ thay đổi như thế nào?",
+ o:["Tăng lên đáng kể","Giảm nhiều","Không đổi","Chỉ tăng khi có dòng một chiều"], c:1},
+{q:"Dòng điện qua cơ thể có giá trị bao nhiêu khi Ung = 220V và Rng = 2kΩ?",
+ o:["11mA","22mA","110mA","220mA"], c:2},
+{q:"Với các giá trị Ung = 220V, Rng = 2kΩ và Ing = 110mA, so với ngưỡng an toàn 10mA thì kết luận là gì?",
+ o:["An toàn tuyệt đối",
+    "Rất nguy hiểm cho người vì Ing lớn hơn nhiều lần ngưỡng cho phép",
+    "Không xác định được",
+    "Chỉ gây cảm giác tê nhẹ"], c:1},
+
+{q:"Dòng điện chạm đất Ich phụ thuộc vào yếu tố nào?",
+ o:["Các thông số của mạng điện và trung tính của lưới",
+    "Chỉ phụ thuộc vào chiều dài dây dẫn",
+    "Chỉ phụ thuộc vào màu sắc vỏ cách điện",
+    "Chỉ phụ thuộc vào nhiệt độ môi trường"], c:0},
+{q:"Trong mạng điện người ta phân tích an toàn để làm gì?",
+ o:["Tính toán, xác định giá trị dòng điện qua người Ing trong các điều kiện tiếp xúc khác nhau với mạng điện",
+    "Thiết kế công suất của trạm biến áp",
+    "Tính toán tổn thất điện năng trên đường dây",
+    "Xác định tiết diện dây dẫn phù hợp với tải"], c:0},
+{q:"Trung tính cách điện đối với đất là trường hợp nào?",
+ o:["Trung tính máy biến áp/máy phát không nối trực tiếp với thiết bị nối đất hoặc nối qua khí cụ có điện trở lớn",
+    "Trung tính nối trực tiếp xuống đất",
+    "Trung tính nối qua điện trở rất nhỏ",
+    "Trung tính luôn bằng điện áp pha"], c:0},
+{q:"Trung tính trực tiếp nối đất là trường hợp nào?",
+ o:["Trung tính nối trực tiếp với thiết bị nối đất hoặc qua một điện trở bé",
+    "Trung tính hoàn toàn cách ly với đất",
+    "Trung tính nối qua tụ điện lớn",
+    "Trung tính không nối với máy biến áp"], c:0},
+{q:"Điều kiện an toàn khi chạm trực tiếp vào 2 cực của mạng điện đơn giản là gì?",
+ o:["Upha < Ucp và ttx ≤ tcp","Upha luôn lớn hơn Ucp",
+    "Không cần điều kiện gì","Chỉ cần ttx ≤ 1 giây"], c:0},
+{q:"Khi chạm vào một dây của mạng không nối đất (mạng cách ly) ở trạng thái bình thường, Ing được tính theo công thức nào?",
+ o:["Ing = Upha / (2Rng + Rcd)","Ing = Upha / Rng","Ing = Upha . Rcd","Ing = Upha / (Rng + Rcd)"], c:0},
+{q:"Dòng điện qua người Ing được xác định theo công thức nào? (Mạng có trung tính nối đất, khi người chạm vào dây pha)",
+ o:["Ing = Upha / (Rng + Rnên)","Ing = Upha / Rnên","Ing = Rng . Rnên","Ing = Upha . Rng"], c:0},
+{q:"Trong mạng có 2 dây nối đất, khi người chạm vào dây pha, điện áp tiếp xúc Utx bằng bao nhiêu?",
+ o:["Utx = Upha","Utx = 0","Utx = Upha/2","Utx = 2Upha"], c:0},
+{q:"Trong mạng có 2 dây nối đất, khi người chạm vào dây trung tính, Utx phụ thuộc vào đại lượng nào?",
+ o:["UN tại vị trí chạm so với đất","Upha toàn phần",
+    "Điện áp dây của mạng","Dòng điện phụ tải"], c:0},
+{q:"Trên thực tế mạng 220/380V, giá trị UN max thường bằng bao nhiêu phần trăm Upha?",
+ o:["1%","5%","10%","20%"], c:1},
+{q:"Điện áp tiếp xúc trong trường hợp chạm gián tiếp được tính theo công thức nào?",
+ o:["Utx = Ud - Uch","Utx = Ud + Uch","Utx = Ud . Uch","Utx = Uch / Ud"], c:0},
+{q:"Điện áp bước được định nghĩa là gì?",
+ o:["Điện áp giáng giữa hai chân người khi người đi vào vùng đất có điện",
+    "Điện áp giữa tay và chân người khi chạm vào vỏ thiết bị",
+    "Điện áp giữa hai dây pha của mạng điện",
+    "Điện áp định mức của máy biến áp"], c:0},
+{q:"Công thức nào thể hiện đúng điện áp bước Ub theo điện áp hai chân?",
+ o:["Ub = Uch1 - Uch2","Ub = Uch1 + Uch2","Ub = Uch1 . Uch2","Ub = Uch1 / Uch2"], c:0},
+{q:"Trong công thức tính điện áp bước, độ dài khoảng bước chân người a thường được lấy bằng bao nhiêu?",
+ o:["0,3m","0,5m","0,8m","1,2m"], c:2},
+{q:"Ở khoảng cách bao xa tính từ điểm chạm đất, điện áp bước có thể được xem gần bằng không (Ub = 0)?",
+ o:["5m","10m","20m","50m"], c:2},
+{q:"Khi người đứng chụm hai chân lại (a → 0), giá trị điện áp bước Ub sẽ như thế nào?",
+ o:["Ub = 0","Ub tăng vô hạn","Ub không đổi","Ub bằng Upha"], c:0},
+
+{q:"Độ tuổi tối thiểu của công nhân phục vụ ngành điện là bao nhiêu?",
+ o:["16 tuổi trở lên","18 tuổi trở lên","20 tuổi trở lên","21 tuổi trở lên"], c:1},
+{q:"Trong thời gian làm việc liên quan đến điện, cần tối thiểu bao nhiêu người tham gia?",
+ o:["1 người","2 người (1 người thực hiện, 1 người theo dõi kiểm tra)","3 người","4 người"], c:1},
+{q:"Việc nối đất các bộ phận kim khí của thiết bị điện nhằm mục đích gì?",
+ o:["Tăng tính thẩm mỹ cho thiết bị",
+    "Đảm bảo an toàn khi có sự cố hư hỏng cách điện gây rò điện ra vỏ",
+    "Giảm chi phí lắp đặt",
+    "Tăng công suất tiêu thụ của thiết bị"], c:1},
+{q:"Dây dẫn điện đặt ngầm cần được đặt trong loại ống bảo vệ nào?",
+ o:["Ống nhựa mềm thông thường","Ống bảo vệ kim loại",
+    "Không cần đặt trong ống bảo vệ","Ống giấy"], c:1},
+{q:"Biện pháp bảo vệ chống tiếp xúc điện gián tiếp bao gồm những gì?",
+ o:["Thực hiện nối vỏ kim loại (sơ đồ nối đất) và sử dụng thiết bị bảo vệ cắt nguồn thích hợp",
+    "Chỉ cần sơn cách điện cho vỏ thiết bị",
+    "Chỉ cần tăng điện áp nguồn cấp",
+    "Không cần biện pháp bảo vệ nào"], c:0},
+{q:"Trong sơ đồ nối đất hạ áp, chữ cái I (Insulation) có ý nghĩa gì?",
+ o:["Nối trực tiếp xuống đất","Dây trung tính","Cách ly","Kết hợp"], c:2},
+{q:"Chữ cái thứ nhất trong tên gọi sơ đồ nối đất (ví dụ TN, TT, IT) thể hiện điều gì?",
+ o:["Hình thức bảo vệ vỏ thiết bị",
+    "Tính chất của trung tính nguồn (mối quan hệ với hệ thống nối đất)",
+    "Loại cầu chì sử dụng",
+    "Số lượng dây pha trong mạng"], c:1},
+{q:"Chữ cái thứ hai trong tên gọi sơ đồ nối đất thể hiện điều gì?",
+ o:["Hình thức bảo vệ, mối quan hệ giữa phần dẫn điện lộ ra ngoài và hệ thống nối đất",
+    "Tính chất trung tính nguồn",
+    "Số pha của mạng điện",
+    "Công suất của tải"], c:0},
+{q:"Hệ thống TN-S có đặc điểm gì về dây trung tính N và dây bảo vệ PE?",
+ o:["N và PE được dùng chung thành một dây PEN",
+    "N và PE được đi tách rời nhau trong hệ thống nguồn",
+    "Không có dây N và PE",
+    "Chỉ có dây PE mà không có dây N"], c:1},
+{q:"Hệ thống TN-C có đặc điểm gì về dây trung tính N và dây bảo vệ PE?",
+ o:["N và PE được dùng chung và gọi là dây PEN",
+    "N và PE hoàn toàn tách biệt",
+    "Không sử dụng dây N",
+    "Chỉ dùng cho mạng điện một chiều"], c:0},
+{q:"Hệ thống TN-C-S có đặc điểm gì?",
+ o:["Chỉ một phần hệ thống có N và PE chung, phần khác N và PE tách riêng",
+    "Toàn bộ hệ thống luôn có N và PE tách riêng",
+    "Toàn bộ hệ thống luôn có N và PE chung",
+    "Không áp dụng dây bảo vệ PE"], c:0},
+{q:"Hệ thống TT (trung tính trực tiếp nối đất) có đặc điểm gì?",
+ o:["Một điểm của nguồn và vỏ thiết bị được nối chung với nhau, dây tiếp đất không nối với trung tính",
+    "Trung tính hoàn toàn cách ly với đất",
+    "Không sử dụng RCD trong hệ thống này",
+    "Chỉ dùng cho lưới điện cao áp"], c:0},
+{q:"Hệ thống IT (trung tính cách ly) có đặc điểm gì?",
+ o:["Trung tính nguồn không nối đất (tổng trở cao với đất), vỏ thiết bị nối thẳng xuống đất",
+    "Trung tính nối trực tiếp xuống đất",
+    "Không có vỏ thiết bị nối đất",
+    "Chỉ dùng cho mạng điện dân dụng thông thường"], c:0},
+{q:"Hệ thống nối đất nào thường được sử dụng cho bệnh viện hoặc nhà máy công nghiệp cần cấp điện liên tục cao nhất?",
+ o:["TN-C","TT","IT","TN-S"], c:2},
+{q:"Hệ thống nối đất nào KHÔNG cho phép lắp đặt thiết bị chống dòng rò RCD?",
+ o:["TN-S","TN-C","TT","IT"], c:1},
+{q:"Trong hệ thống IT, sự cố chạm đất một pha có dẫn đến ngắn mạch một pha ngay lập tức hay không?",
+ o:["Có, luôn dẫn đến ngắn mạch ngay",
+    "Không dẫn đến ngắn mạch một pha",
+    "Chỉ dẫn đến ngắn mạch khi có RCD",
+    "Không thể xảy ra sự cố chạm đất trong hệ IT"], c:1},
+{q:"Aptomat (Áp tô mát) có chức năng chính là gì?",
+ o:["Chỉ đo điện áp của mạng điện",
+    "Đóng cắt hạ áp, bảo vệ quá tải và ngắn mạch trong mạch điện hạ áp",
+    "Chỉ dùng để chiếu sáng",
+    "Chỉ dùng để đo dòng điện rò"], c:1},
+{q:"Phần tử nhiệt (thanh lưỡng kim) trong Aptomat có nhiệm vụ bảo vệ trường hợp nào?",
+ o:["Bảo vệ quá tải, tác động diễn ra chậm hơn",
+    "Bảo vệ ngắn mạch, tác động rất nhanh",
+    "Chỉ dùng để chiếu sáng báo hiệu",
+    "Không có chức năng bảo vệ nào"], c:0},
+{q:"RCD (Aptomat chống rò) có sẵn trên thị trường với các mức dòng rò IAN phổ biến nào?",
+ o:["10mA, 30mA, 100mA, 0,3A, 0,5A","1A, 5A, 10A","100A, 200A, 300A","1kA, 2kA, 5kA"], c:0},
+{q:"Thời gian cắt tối đa cho phép của RCD để đảm bảo an toàn khi xảy ra sự cố cách điện là bao nhiêu?",
+ o:["0,05 giây","0,2 giây","1 giây","5 giây"], c:0},
+{q:"RCD sử dụng trong lắp đặt điện dân dụng cần được kiểm tra hoạt động tối thiểu bao lâu một lần?",
+ o:["1 tháng","3 tháng","6 tháng","1 năm"], c:2}
+];
+
+var N = 70, LIMIT = 90*60, L = ['A','B','C','D'];
+var quiz = [], ans = [], pos = 0, left = LIMIT, tid = null, done = false, cbOk = null;
+var filter = 'all';
+
+function tron(a){
+  for(var i=a.length-1;i>0;i--){
+    var j = Math.floor(Math.random()*(i+1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+function show(id){
+  var s = document.querySelectorAll('.screen');
+  for(var i=0;i<s.length;i++) s[i].classList.remove('active');
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function clock(s){
+  var m = Math.floor(s/60), r = s%60;
+  return (m<10?'0':'')+m+':'+(r<10?'0':'')+r;
+}
+
+function dlg(o){
+  document.getElementById('dlgTitle').textContent = o.title || '';
+  document.getElementById('dlgBody').textContent  = o.body || '';
+  var ok = document.getElementById('dlgOk');
+  var no = document.getElementById('dlgCancel');
+  ok.textContent = o.ok || 'OK';
+  no.textContent = o.no || 'Hủy';
+  no.style.display = o.onlyOk ? 'none' : '';
+  cbOk = o.cb || null;
+  document.getElementById('mask').classList.add('show');
+}
+function closeDlg(){
+  document.getElementById('mask').classList.remove('show');
+  cbOk = null;
+}
+document.getElementById('dlgOk').onclick = function(){
+  var f = cbOk;
+  closeDlg();
+  if(f) f();
+};
+document.getElementById('dlgCancel').onclick = closeDlg;
+document.getElementById('mask').onclick = function(e){
+  if(e.target.id === 'mask') closeDlg();
+};
+
+document.getElementById('btnStart').onclick = function(){
+  show('screen-loading');
+  var p = 0;
+  var bar = document.getElementById('bar');
+  var pct = document.getElementById('pct');
+  var iv = setInterval(function(){
+    p += Math.random()*7 + 2;
+    if(p > 100) p = 100;
+    bar.style.width = p + '%';
+    pct.textContent = Math.floor(p) + '%';
+    if(p === 100){
+      clearInterval(iv);
+      setTimeout(function(){ show('screen-ready'); }, 350);
+    }
+  }, 90);
+};
+
+document.getElementById('btnReady').onclick = start;
+
+function start(){
+  makeQuiz();
+  done = false;
+  left = LIMIT;
+  pos = 0;
+  tick();
+  show('screen-quiz');
+  drawQ();
+  clearInterval(tid);
+  tid = setInterval(function(){
+    left--;
+    tick();
+    if(left <= 0){
+      clearInterval(tid);
+      finish(true);
+    }
+  }, 1000);
+}
+
+function makeQuiz(){
+  var pick = tron(BANK.slice()).slice(0, N);
+  quiz = pick.map(function(item){
+    var opts = item.o.map(function(txt, k){
+      return {txt: txt, ok: k === item.c};
+    });
+    tron(opts);
+    var ci = 0;
+    for(var i=0;i<opts.length;i++) if(opts[i].ok) ci = i;
+    return {q: item.q, opts: opts, ci: ci};
+  });
+  ans = new Array(quiz.length).fill(null);
+}
+
+function drawQ(){
+  var q = quiz[pos];
+  document.getElementById('qIndex').textContent = 'Câu ' + (pos+1) + '/' + quiz.length;
+  document.getElementById('qText').textContent = q.q;
+
+  var box = document.getElementById('options');
+  box.innerHTML = '';
+  q.opts.forEach(function(o, i){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'opt' + (ans[pos] === i ? ' picked' : '');
+
+    var l = document.createElement('b');
+    l.textContent = L[i] + '.';
+    b.appendChild(l);
+    b.appendChild(document.createTextNode(' ' + o.txt));
+
+    b.onclick = function(){
+      ans[pos] = i;
+      drawQ();
+    };
+    box.appendChild(b);
+  });
+
+  document.getElementById('prevBtn').disabled = pos === 0;
+  document.getElementById('nextBtn').disabled = pos === quiz.length - 1;
+
+  var n = ans.filter(function(x){ return x !== null; }).length;
+  document.getElementById('progress').textContent = n + '/' + quiz.length;
+}
+
+document.getElementById('prevBtn').onclick = function(){
+  if(pos > 0){ pos--; drawQ(); }
+};
+document.getElementById('nextBtn').onclick = function(){
+  if(pos < quiz.length - 1){ pos++; drawQ(); }
+};
+
+function tick(){
+  var el = document.getElementById('timer');
+  el.textContent = clock(Math.max(0, left));
+  el.className = left <= 300 ? 'low' : '';
+}
+
+function askSubmit(){
+  if(done || quiz.length === 0) return;
+  var trong = ans.filter(function(x){ return x === null; }).length;
+  var body = 'Nộp bài luôn?';
+  if(trong > 0) body = 'Còn ' + trong + ' câu chưa làm.\n\nVẫn nộp?';
+
+  dlg({
+    title: 'Nộp bài',
+    body: body,
+    ok: 'Nộp',
+    no: 'Làm tiếp',
+    cb: function(){ finish(false); }
+  });
+}
+
+document.getElementById('btnSubmit').onclick = askSubmit;
+
+function finish(auto){
+  if(done) return;
+  done = true;
+  clearInterval(tid);
+
+  var used = LIMIT - Math.max(0, left);
+  var dung = 0, bo = 0;
+  quiz.forEach(function(q, i){
+    if(ans[i] === null) bo++;
+    else if(ans[i] === q.ci) dung++;
+  });
+  var sai = quiz.length - dung - bo;
+  var diem = dung * 10 / quiz.length;
+
+  document.getElementById('bigScore').textContent = diem.toFixed(2);
+
+  var v = document.getElementById('verdict');
+  var cls = 'verdict ';
+  if(diem >= 8){ cls += 'g'; v.textContent = 'Làm tốt lắm!'; }
+  else if(diem >= 5){ cls += 'y'; v.textContent = 'Tạm ổn, cần ôn thêm.'; }
+  else { cls += 'r'; v.textContent = 'Cần ôn luyện nhiều hơn.'; }
+  v.className = cls;
+
+  document.getElementById('mDung').textContent = dung;
+  document.getElementById('mSai').textContent = sai;
+  document.getElementById('mBo').textContent = bo;
+  document.getElementById('mTime').textContent = clock(used);
+
+  filter = 'all';
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.classList.toggle('on', t.dataset.filter === 'all');
+  });
+
+  drawList();
+  show('screen-result');
+
+  if(auto){
+    dlg({
+      title: 'Hết giờ',
+      body: 'Đã hết 90 phút. Bài đã được thu tự động.',
+      ok: 'Xem',
+      onlyOk: true
+    });
+  }
+}
+
+function drawList(){
+  var wrap = document.getElementById('rlist');
+  wrap.innerHTML = '';
+
+  quiz.forEach(function(q, i){
+    var chon = ans[i];
+    var dung = chon === q.ci;
+    var bo = chon === null;
+
+    if(filter === 'wrong' && dung) return;
+    if(filter === 'right' && !dung) return;
+
+    var row = document.createElement('div');
+    row.className = 'rrow';
+
+    var head = document.createElement('div');
+    head.className = 'rhead';
+
+    var stt = document.createElement('div');
+    stt.className = 'rstt ' + (dung ? 'ok' : (bo ? 'skip' : 'bad'));
+    stt.textContent = i + 1;
+
+    var txt = document.createElement('div');
+    txt.className = 'rtxt';
+    txt.textContent = q.q.length > 90 ? q.q.slice(0,90) + '...' : q.q;
+
+    var ar = document.createElement('div');
+    ar.className = 'rar';
+    ar.textContent = '▼';
+
+    head.appendChild(stt);
+    head.appendChild(txt);
+    head.appendChild(ar);
+
+    var body = document.createElement('div');
+    body.className = 'rbody';
+
+    var full = document.createElement('div');
+    full.className = 'rfull';
+    full.textContent = 'Câu ' + (i+1) + '. ' + q.q;
+    body.appendChild(full);
+
+    q.opts.forEach(function(o, j){
+      var el = document.createElement('div');
+      el.className = 'ropt';
+      if(j === q.ci) el.classList.add('correct');
+      else if(j === chon) el.classList.add('wrong');
+
+      var mk = '';
+      if(j === q.ci) mk = '  <- đáp án đúng';
+      else if(j === chon) mk = '  <- bạn chọn';
+
+      el.textContent = L[j] + '. ' + o.txt + mk;
+      body.appendChild(el);
+    });
+
+    head.onclick = function(){ row.classList.toggle('open'); };
+
+    row.appendChild(head);
+    row.appendChild(body);
+    wrap.appendChild(row);
+  });
+
+  if(!wrap.children.length){
+    var e = document.createElement('div');
+    e.className = 'empty';
+    e.textContent = filter === 'wrong' ? 'Không có câu sai.' : 'Không có câu đúng.';
+    wrap.appendChild(e);
+  }
+}
+
+document.querySelectorAll('.tab').forEach(function(t){
+  t.onclick = function(){
+    filter = t.dataset.filter;
+    document.querySelectorAll('.tab').forEach(function(x){
+      x.classList.toggle('on', x === t);
+    });
+    drawList();
+  };
+});
+
+document.getElementById('btnAgain').onclick = function(){
+  dlg({
+    title: 'Làm lại bài mới?',
+    body: 'Bài hiện tại sẽ bị xóa và tạo đề mới.',
+    ok: 'Làm lại',
+    no: 'Thôi',
+    cb: function(){
+      clearInterval(tid);
+      done = false;
+      quiz = []; ans = []; pos = 0; left = LIMIT;
+      show('screen-start');
+    }
+  });
+};
+
+document.addEventListener('keydown', function(e){
+  if(document.getElementById('mask').classList.contains('show')){
+    if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('dlgOk').click(); }
+    if(e.key === 'Escape'){ closeDlg(); }
+    return;
+  }
+  if(!document.getElementById('screen-quiz').classList.contains('active')) return;
+  if(!quiz.length) return;
+
+  var k = e.key.toUpperCase();
+  var map = {A:0, B:1, C:2, D:3, '1':0, '2':1, '3':2, '4':3};
+  if(k in map){
+    ans[pos] = map[k];
+    drawQ();
+  }
+  if(e.key === 'ArrowLeft' && pos > 0){ pos--; drawQ(); }
+  if(e.key === 'ArrowRight' && pos < quiz.length-1){ pos++; drawQ(); }
+});
+</script>
+</body>
+</html>
