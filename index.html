@@ -106,7 +106,6 @@ button:disabled:hover{background:#fff;color:#333;border-color:#bbb}
 <body>
 
 <div class="toast" id="toastWelcome">
-  <span class="icon"></span>
   <button class="close" id="toastClose" title="Đóng"></button>
   <span>ĐANG SỬA NHỮNG LỖI SAI RỒI NHÁ 😃</span>
 </div>
@@ -135,8 +134,7 @@ button:disabled:hover{background:#fff;color:#333;border-color:#bbb}
   </div>
 </section>
 
-<div class="toast" id="toastWelcome">
-  <span class="icon"></span>
+<div class="toast" id="batdau">
   <button class="close" id="toastClose" title="Đóng"></button>
   <span>90 Phút Bắt Đầu!</span>
 </div>
@@ -158,9 +156,7 @@ button:disabled:hover{background:#fff;color:#333;border-color:#bbb}
   </div>
 </section>
 
-<div class="toast" id="toastWelcome">
-  <span class="icon"></span>
-  <button class="close" id="toastClose" title="Đóng"></button>
+<div class="toast" id="camon">
   <span>🌹 Cảm Ơn Bạn Đã Sử Dụng Web Và Làm Bài</span>
 </div>
 
@@ -1389,6 +1385,53 @@ document.getElementById('toastClose').onclick = function () {
 window.addEventListener('load', function () {
     hienToast(6000);
 });
+
+var toastEl = document.getElementById('batdau');
+var toastTimer = null;
+
+function hienToast(thoiGian) {
+    toastEl.classList.remove('show');
+    setTimeout(function () {
+        toastEl.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+            toastEl.classList.remove('show');
+        }, thoiGian || 5000);
+    }, 100);
+}
+
+document.getElementById('toastClose').onclick = function () {
+    clearTimeout(toastTimer);
+    toastEl.classList.remove('show');
+};
+
+window.addEventListener('load', function () {
+    hienToast(6000);
+});
+
+var toastEl = document.getElementById('camon');
+var toastTimer = null;
+
+function hienToast(thoiGian) {
+    toastEl.classList.remove('show');
+    setTimeout(function () {
+        toastEl.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+            toastEl.classList.remove('show');
+        }, thoiGian || 5000);
+    }, 100);
+}
+
+document.getElementById('toastClose').onclick = function () {
+    clearTimeout(toastTimer);
+    toastEl.classList.remove('show');
+};
+
+window.addEventListener('load', function () {
+    hienToast(6000);
+});
+
 </script>
 </body>
 </html>
